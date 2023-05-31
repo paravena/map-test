@@ -1,4 +1,9 @@
-import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
+import {
+  GoogleMap,
+  useLoadScript,
+  Marker,
+  OverlayView,
+} from '@react-google-maps/api';
 import '@reach/combobox/styles.css';
 import { useMemo, useState } from 'react';
 import PlacesAutocomplete from './PlacesAutocomplete';

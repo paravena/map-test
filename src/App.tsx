@@ -1,10 +1,10 @@
 import React from 'react';
-import Matrix from './components/Matrix';
+import MatrixOverlay from './components/MatrixOverlay';
 
 function App() {
   return (
     <main>
-      <Matrix />
+      <MatrixOverlay />
     </main>
   );
 }
