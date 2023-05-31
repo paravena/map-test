@@ -7,50 +7,62 @@ import {
   Rectangle,
 } from './utilities';
 
-function createOverlay(map: google.maps.Map, rec: Rectangle) {
-  const overlay = new google.maps.OverlayView();
-  // Create a custom overlay with centered text
-  overlay.draw = function () {
-    const overlayProjection = this.getProjection();
-    const sw = overlayProjection.fromLatLngToDivPixel(rec.sw);
-    const ne = overlayProjection.fromLatLngToDivPixel(rec.ne);
-    // @ts-ignore
-    const div = (this.div = document.createElement('div'));
-    if (ne && sw) {
-      div.style.position = 'absolute';
-      div.style.width = ne.x - sw.x + 'px';
-      div.style.height = sw.y - ne.y + 'px';
-      div.style.left = sw.x + 'px';
-      div.style.top = ne.y + 'px';
-    }
-    div.style.display = 'flex';
-    div.style.justifyContent = 'center';
-    div.style.alignItems = 'center';
-    div.style.backgroundColor = 'rgba(255, 255, 255, 0.5)'; // Adjust background color and opacity as needed
-    div.style.color = 'black'; // Adjust text color as needed
-    div.style.fontFamily = 'Arial, sans-serif'; // Adjust font family as needed
-    div.style.fontSize = '16px'; // Adjust font size as needed
-    div.style.fontWeight = 'bold'; // Adjust font weight as needed
-    div.style.pointerEvents = 'none'; // Make sure the overlay doesn't interfere with map interactions
-    div.style.border = 'solid 1px red';
-    // Specify the text content
-    div.textContent = 'Centered Text';
-    this.getPanes()?.markerLayer.appendChild(div);
-  };
-  overlay.onRemove = function () {
-    // @ts-ignore
-    // const div = this.div;
-    // if (div) {
-    //   (div.parentNode as HTMLElement).removeChild(div);
-    // }
-  };
+class CounterOverlay extends google.maps.OverlayView {
+  private readonly div: HTMLDivElement;
+  constructor(private map: google.maps.Map, private rec: Rectangle) {
+    super();
+    this.div = document.createElement('div');
+  }
 
+  onAdd() {
+    this.div.style.position = 'absolute';
+    const panes = this.getPanes()!;
+    panes.overlayLayer.appendChild(this.div);
+  }
+  draw() {
+    const overlayProjection = this.getProjection();
+    const sw = overlayProjection.fromLatLngToDivPixel(this.rec.sw);
+    const ne = overlayProjection.fromLatLngToDivPixel(this.rec.ne);
+    if (ne && sw) {
+      this.div.style.position = 'absolute';
+      this.div.style.width = ne.x - sw.x + 'px';
+      this.div.style.height = sw.y - ne.y + 'px';
+      this.div.style.left = sw.x + 'px';
+      this.div.style.top = ne.y + 'px';
+    }
+    this.div.style.display = 'flex';
+    this.div.style.justifyContent = 'center';
+    this.div.style.alignItems = 'center';
+    this.div.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+    this.div.style.color = 'black';
+    this.div.style.fontFamily = 'Arial, sans-serif';
+    this.div.style.fontSize = '16px';
+    this.div.style.fontWeight = 'bold';
+    this.div.style.pointerEvents = 'none';
+    this.div.style.border = 'solid 1px red';
+    // Specify the text content
+    this.div.textContent = 'Centered Text';
+  }
+
+  onRemove() {
+    if (this.div) {
+      (this.div.parentNode as HTMLElement).removeChild(this.div);
+    }
+  }
+}
+
+function createOverlay(map: google.maps.Map, rec: Rectangle) {
+  const overlay = new CounterOverlay(map, rec);
   overlay.setMap(map);
   return overlay;
 }
 const MatrixOverlay = () => {
   return (
-    <Wrapper apiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || ''}>
+    <Wrapper
+      apiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || ''}
+      libraries={['marker']}
+      version="beta"
+    >
       <MatrixMap />
     </Wrapper>
   );
@@ -66,7 +78,7 @@ const mapOptions: google.maps.MapOptions = {
 
 const MatrixMap = () => {
   const [map, setMap] = useState<google.maps.Map>();
-  const overlays = useRef<google.maps.OverlayView[]>([]);
+  const overlays = useRef<CounterOverlay[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
   const idleMapListener = useCallback(async () => {
@@ -76,12 +88,7 @@ const MatrixMap = () => {
     const ne = bounds?.getNorthEast();
     const sw = bounds?.getSouthWest();
 
-    await Promise.all(
-      overlays.current.map(overlay => {
-        // overlay?.onRemove();
-        return overlay?.setMap(null);
-      }),
-    );
+    await Promise.all(overlays.current.map(overlay => overlay?.setMap(null)));
 
     if (zoom && ne && sw) {
       const [rows, columns] = calculateNumberOfRowsAndColumnsByZoomLevel(zoom);
