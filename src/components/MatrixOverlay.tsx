@@ -28,9 +28,8 @@ const MatrixOverlay = () => {
 const mapOptions: google.maps.MapOptions = {
   center: { lat: 43.66293, lng: -79.39314 },
   zoom: 6,
-  disableDefaultUI: true,
   maxZoom: 9,
-  minZoom: 0,
+  minZoom: 2,
 };
 
 const MatrixMap = () => {
