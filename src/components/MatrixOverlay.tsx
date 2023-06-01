@@ -6,50 +6,7 @@ import {
   generateRectangles,
   Rectangle,
 } from './utilities';
-
-class CounterOverlay extends google.maps.OverlayView {
-  private readonly div: HTMLDivElement;
-  constructor(private map: google.maps.Map, private rec: Rectangle) {
-    super();
-    this.div = document.createElement('div');
-  }
-
-  onAdd() {
-    this.div.style.position = 'absolute';
-    const panes = this.getPanes()!;
-    panes.overlayLayer.appendChild(this.div);
-  }
-  draw() {
-    const overlayProjection = this.getProjection();
-    const sw = overlayProjection.fromLatLngToDivPixel(this.rec.sw);
-    const ne = overlayProjection.fromLatLngToDivPixel(this.rec.ne);
-    if (ne && sw) {
-      this.div.style.position = 'absolute';
-      this.div.style.width = ne.x - sw.x + 'px';
-      this.div.style.height = sw.y - ne.y + 'px';
-      this.div.style.left = sw.x + 'px';
-      this.div.style.top = ne.y + 'px';
-    }
-    this.div.style.display = 'flex';
-    this.div.style.justifyContent = 'center';
-    this.div.style.alignItems = 'center';
-    this.div.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
-    this.div.style.color = 'black';
-    this.div.style.fontFamily = 'Arial, sans-serif';
-    this.div.style.fontSize = '16px';
-    this.div.style.fontWeight = 'bold';
-    this.div.style.pointerEvents = 'none';
-    this.div.style.border = 'solid 1px red';
-    // Specify the text content
-    this.div.textContent = 'Centered Text';
-  }
-
-  onRemove() {
-    if (this.div) {
-      (this.div.parentNode as HTMLElement).removeChild(this.div);
-    }
-  }
-}
+import { CounterOverlay } from './CouterOverlay';
 
 function createOverlay(map: google.maps.Map, rec: Rectangle) {
   const overlay = new CounterOverlay(map, rec);
@@ -60,7 +17,7 @@ const MatrixOverlay = () => {
   return (
     <Wrapper
       apiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || ''}
-      libraries={['marker']}
+      libraries={['marker', 'drawing']}
       version="beta"
     >
       <MatrixMap />
