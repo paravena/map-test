@@ -1,11 +1,10 @@
 import React from 'react';
-import MatrixOverlay from './components/MatrixOverlay';
-import Matrix from './components/Matrix';
+import MapOverlays from './components/MapOverlays';
 
 function App() {
   return (
     <main>
-      <MatrixOverlay />
+      <MapOverlays />
     </main>
   );
 }

@@ -8,17 +8,22 @@ import {
 } from './utilities';
 import { CounterOverlay } from './CouterOverlay';
 
-function createOverlay(map: google.maps.Map, rec: Rectangle) {
-  const overlay = new CounterOverlay(map, rec);
+function createOverlay(map: google.maps.Map, rec: Rectangle, index: number) {
+  const overlay = new CounterOverlay(map, rec, index);
   overlay.setMap(map);
   return overlay;
 }
-const MatrixOverlay = () => {
+const MapOverlays = () => {
   return (
     <Wrapper
       apiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || ''}
-      libraries={['marker', 'drawing']}
-      version="beta"
+      libraries={[
+        'marker',
+        'places',
+        'drawing',
+        'visualization',
+        'localContext',
+      ]}
     >
       <MatrixMap />
     </Wrapper>
@@ -26,10 +31,11 @@ const MatrixOverlay = () => {
 };
 
 const mapOptions: google.maps.MapOptions = {
-  center: { lat: 43.66293, lng: -79.39314 },
-  zoom: 6,
-  maxZoom: 9,
-  minZoom: 2,
+  center: { lat: 0, lng: 0 },
+  zoom: 3,
+  maxZoom: 8,
+  minZoom: 3,
+  scrollwheel: false,
 };
 
 const MatrixMap = () => {
@@ -56,7 +62,9 @@ const MatrixMap = () => {
         sw.lat(),
         sw.lng(),
       );
-      overlays.current = newRectangles.map(rec => createOverlay(map, rec));
+      overlays.current = newRectangles.map((rec, index) =>
+        createOverlay(map, rec, index),
+      );
     }
   }, [map]);
 
@@ -83,4 +91,4 @@ const MatrixMap = () => {
   );
 };
 
-export default MatrixOverlay;
+export default MapOverlays;
