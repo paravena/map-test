@@ -46,7 +46,11 @@ export class CounterOverlay {
         const position = bounds.getCenter();
         this.map.fitBounds(bounds);
         this.map.panTo(position);
-        this.map.setZoom(8);
+        const currentZoom = this.map.getZoom();
+        console.log('CURRENT ZOOM', currentZoom);
+        if (currentZoom && currentZoom < 8) {
+          this.map.setZoom(currentZoom + 2);
+        }
       });
     }
   }

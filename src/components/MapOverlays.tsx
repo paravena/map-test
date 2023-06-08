@@ -1,12 +1,11 @@
 import './Markers.css';
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { Wrapper } from '@googlemaps/react-wrapper';
-import {
-  calculateNumberOfRowsAndColumnsByZoomLevel,
-  generateRectangles,
-  Rectangle,
-} from './utilities';
+import { generateRectangles, Rectangle } from './utilities';
 import { CounterOverlay } from './CouterOverlay';
+
+const MIN_ZOOM = 3;
+const MAX_ZOOM = 8;
 
 function createOverlay(map: google.maps.Map, rec: Rectangle, index: number) {
   const overlay = new CounterOverlay(map, rec, index);
@@ -32,14 +31,18 @@ const MapOverlays = () => {
 
 const mapOptions: google.maps.MapOptions = {
   center: { lat: 0, lng: 0 },
-  zoom: 3,
-  maxZoom: 8,
-  minZoom: 3,
+  zoom: MIN_ZOOM,
+  maxZoom: MAX_ZOOM,
+  minZoom: MIN_ZOOM,
   scrollwheel: false,
+  isFractionalZoomEnabled: true,
+  // disableDefaultUI: true,
 };
 
 const MatrixMap = () => {
   const [map, setMap] = useState<google.maps.Map>();
+  const initNE = useRef<google.maps.LatLng>();
+  const initSW = useRef<google.maps.LatLng>();
   const overlays = useRef<CounterOverlay[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -47,16 +50,25 @@ const MatrixMap = () => {
     if (!map) return;
     const bounds = map.getBounds();
     const zoom = map.getZoom();
-    const ne = bounds?.getNorthEast();
-    const sw = bounds?.getSouthWest();
+    let ne = bounds?.getNorthEast();
+    let sw = bounds?.getSouthWest();
+
+    // This fixes a weird problem
+    if (!initNE.current && !initSW.current && zoom === MIN_ZOOM) {
+      initNE.current = ne;
+      initSW.current = sw;
+    } else if (zoom === MIN_ZOOM) {
+      ne = initNE.current;
+      sw = initSW.current;
+    }
 
     await Promise.all(overlays.current.map(overlay => overlay?.setMap(null)));
 
     if (zoom && ne && sw) {
-      const [rows, columns] = calculateNumberOfRowsAndColumnsByZoomLevel(zoom);
+      console.log(`Zoom ${zoom}, ne ${ne} sw ${sw}`);
       const newRectangles = generateRectangles(
-        rows,
-        columns,
+        2,
+        8,
         ne.lat(),
         ne.lng(),
         sw.lat(),
