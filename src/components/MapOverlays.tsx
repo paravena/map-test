@@ -48,8 +48,8 @@ const MatrixMap = () => {
 
   const idleMapListener = useCallback(async () => {
     if (!map) return;
-    const bounds = map.getBounds();
     const zoom = map.getZoom();
+    const bounds = map.getBounds();
     let ne = bounds?.getNorthEast();
     let sw = bounds?.getSouthWest();
 
