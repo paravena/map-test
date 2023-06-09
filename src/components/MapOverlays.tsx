@@ -43,23 +43,30 @@ const MatrixMap = () => {
   const [map, setMap] = useState<google.maps.Map>();
   const initNE = useRef<google.maps.LatLng>();
   const initSW = useRef<google.maps.LatLng>();
+  const initCenter = useRef<google.maps.LatLng>();
   const overlays = useRef<CounterOverlay[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
   const idleMapListener = useCallback(async () => {
     if (!map) return;
     const zoom = map.getZoom();
+    console.log('ZOOM', zoom);
     const bounds = map.getBounds();
     let ne = bounds?.getNorthEast();
     let sw = bounds?.getSouthWest();
 
     // This fixes a weird problem
-    if (!initNE.current && !initSW.current && zoom === MIN_ZOOM) {
+    if (!initNE.current && !initSW.current && bounds && zoom === MIN_ZOOM) {
       initNE.current = ne;
       initSW.current = sw;
+      initCenter.current = bounds.getCenter();
     } else if (zoom === MIN_ZOOM) {
       ne = initNE.current;
       sw = initSW.current;
+      if (initCenter.current) {
+        map.panTo(initCenter.current);
+        initCenter.current = undefined;
+      }
     }
 
     await Promise.all(overlays.current.map(overlay => overlay?.setMap(null)));
