@@ -4,8 +4,8 @@ import { Wrapper } from '@googlemaps/react-wrapper';
 import { generateRectangles, Rectangle } from './utilities';
 import { CounterOverlay } from './CouterOverlay';
 
-const MIN_ZOOM = 3;
-const MAX_ZOOM = 8;
+export const MIN_ZOOM = 2;
+export const MAX_ZOOM = 5;
 
 function createOverlay(map: google.maps.Map, rec: Rectangle, index: number) {
   const overlay = new CounterOverlay(map, rec, index);
@@ -14,17 +14,8 @@ function createOverlay(map: google.maps.Map, rec: Rectangle, index: number) {
 }
 const MapOverlays = () => {
   return (
-    <Wrapper
-      apiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || ''}
-      libraries={[
-        'marker',
-        'places',
-        'drawing',
-        'visualization',
-        'localContext',
-      ]}
-    >
-      <MatrixMap />
+    <Wrapper apiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || ''}>
+      <MapContainer />
     </Wrapper>
   );
 };
@@ -34,12 +25,9 @@ const mapOptions: google.maps.MapOptions = {
   zoom: MIN_ZOOM,
   maxZoom: MAX_ZOOM,
   minZoom: MIN_ZOOM,
-  scrollwheel: false,
-  isFractionalZoomEnabled: true,
-  // disableDefaultUI: true,
 };
 
-const MatrixMap = () => {
+const MapContainer = () => {
   const [map, setMap] = useState<google.maps.Map>();
   const initNE = useRef<google.maps.LatLng>();
   const initSW = useRef<google.maps.LatLng>();
@@ -81,6 +69,7 @@ const MatrixMap = () => {
         sw.lat(),
         sw.lng(),
       );
+      console.log('RECREATING OVERLAYS');
       overlays.current = newRectangles.map((rec, index) =>
         createOverlay(map, rec, index),
       );

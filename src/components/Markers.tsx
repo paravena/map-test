@@ -16,7 +16,6 @@ const Markers = () => {
 };
 
 const mapOptions = {
-  mapId: process.env.REACT_APP_GOOGLE_MAPS_ID,
   center: { lat: 43.66293, lng: -79.39314 },
   zoom: 10,
   disableDefaultUI: true,
