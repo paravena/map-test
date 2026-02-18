@@ -129,3 +129,26 @@
     width: 100%;
     height: 100vh;
 }
+
+.map-overlay-item {
+    border: solid 1px rgba(255, 0, 0, 0.5);
+    background-color: rgba(255, 255, 255, 0);
+    color: black;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.map-overlay-item:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.map-overlay-item.highlighted {
+    border: 5px solid yellow;
+    background-color: rgba(255, 255, 0, 0.2);
+}
+
+.overlay-text {
+    pointer-events: none;
+}

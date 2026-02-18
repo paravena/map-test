@@ -14,13 +14,13 @@ export function calculateNumberOfRowsAndColumnsByZoomLevel(zoom: number) {
 }
 
 export function generateRectangles(
-  rows: number,
-  columns: number,
+  zoom: number,
   neLat: number,
   neLng: number,
   swLat: number,
   swLng: number,
 ): Rectangle[] {
+  const [rows, columns] = calculateNumberOfRowsAndColumnsByZoomLevel(zoom);
   const latDiff = Math.abs(neLat - swLat);
   const lngDiff = Math.abs(neLng - swLng);
   const rectWidth = latDiff / rows;

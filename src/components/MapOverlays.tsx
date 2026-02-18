@@ -1,101 +1,78 @@
 import './Markers.css';
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
-import { Wrapper } from '@googlemaps/react-wrapper';
+import React, { useCallback, useRef, useState } from 'react';
+import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import { generateRectangles, Rectangle } from './utilities';
-import { CounterOverlay } from './CouterOverlay';
+import CounterOverlay from './CounterOverlayReact';
 
-export const MIN_ZOOM = 2;
-export const MAX_ZOOM = 5;
-
-function createOverlay(map: google.maps.Map, rec: Rectangle, index: number) {
-  const overlay = new CounterOverlay(map, rec, index);
-  overlay.setMap(map);
-  return overlay;
-}
-const MapOverlays = () => {
-  return (
-    <Wrapper apiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY || ''}>
-      <MapContainer />
-    </Wrapper>
-  );
-};
+const LIBRARIES: ('places' | 'drawing' | 'geometry' | 'visualization')[] = [
+  'geometry',
+];
+const MIN_ZOOM = 2;
+const MAX_ZOOM = 18;
 
 const mapOptions: google.maps.MapOptions = {
   center: { lat: 0, lng: 0 },
   zoom: MIN_ZOOM,
   maxZoom: MAX_ZOOM,
   minZoom: MIN_ZOOM,
+  streetViewControl: false,
 };
 
-const MapContainer = () => {
-  const [map, setMap] = useState<google.maps.Map>();
-  const initNE = useRef<google.maps.LatLng>();
-  const initSW = useRef<google.maps.LatLng>();
-  const initCenter = useRef<google.maps.LatLng>();
-  const overlays = useRef<CounterOverlay[]>([]);
-  const ref = useRef<HTMLDivElement>(null);
+const MapOverlays = () => {
+  const apiKey = process.env.REACT_APP_GOOGLE_MAPS_KEY;
 
-  const idleMapListener = useCallback(async () => {
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: apiKey || '',
+    libraries: LIBRARIES,
+  });
+
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [rectangles, setRectangles] = useState<Rectangle[]>([]);
+
+  const handleIdle = useCallback(() => {
     if (!map) return;
-    const zoom = map.getZoom();
-    console.log('ZOOM', zoom);
+
     const bounds = map.getBounds();
-    let ne = bounds?.getNorthEast();
-    let sw = bounds?.getSouthWest();
+    const zoom = map.getZoom();
 
-    // This fixes a weird problem
-    if (!initNE.current && !initSW.current && bounds && zoom === MIN_ZOOM) {
-      initNE.current = ne;
-      initSW.current = sw;
-      initCenter.current = bounds.getCenter();
-    } else if (zoom === MIN_ZOOM) {
-      ne = initNE.current;
-      sw = initSW.current;
-      if (initCenter.current) {
-        map.panTo(initCenter.current);
-        initCenter.current = undefined;
-      }
-    }
+    if (bounds && zoom !== undefined) {
+      const ne = bounds.getNorthEast();
+      const sw = bounds.getSouthWest();
 
-    await Promise.all(overlays.current.map(overlay => overlay?.setMap(null)));
-
-    if (zoom && ne && sw) {
-      console.log(`Zoom ${zoom}, ne ${ne} sw ${sw}`);
-      const newRectangles = generateRectangles(
-        2,
-        8,
+      const newRects = generateRectangles(
+        zoom,
         ne.lat(),
         ne.lng(),
         sw.lat(),
         sw.lng(),
       );
-      console.log('RECREATING OVERLAYS');
-      overlays.current = newRectangles.map((rec, index) =>
-        createOverlay(map, rec, index),
-      );
+      setRectangles(newRects);
     }
   }, [map]);
 
-  useEffect(() => {
-    if (ref.current) {
-      setMap(new google.maps.Map(ref.current, mapOptions));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!map) return;
-    const listener = google.maps.event.addListener(
-      map,
-      'idle',
-      idleMapListener,
-    );
-    return () => listener.remove();
-  }, [map, idleMapListener]);
+  if (loadError) return <div>Error loading maps</div>;
+  if (!isLoaded) return <div>Loading...</div>;
+  if (!apiKey) return <div>Missing Google Maps API Key in .env file</div>;
 
   return (
-    <>
-      <div ref={ref as RefObject<HTMLDivElement>} id="map"></div>
-    </>
+    <div style={{ width: '100%', height: '100vh' }}>
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        options={mapOptions}
+        onLoad={setMap}
+        onIdle={handleIdle}
+      >
+        {map &&
+          rectangles.map((rec, index) => (
+            <CounterOverlay
+              key={`${rec.ne.lat}-${rec.ne.lng}-${index}`}
+              map={map}
+              rec={rec}
+              index={index}
+            />
+          ))}
+      </GoogleMap>
+    </div>
   );
 };
 
